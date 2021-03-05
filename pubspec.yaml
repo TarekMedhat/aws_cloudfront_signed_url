@@ -2,7 +2,7 @@ name: aws_cloudfront_signed_url
 description: Create a signed AWS cloudfront url using a custom policy
 version: 0.0.1
 author: Tarek Tolba
-repository: https://github.com/rrousselGit/river_pod
+repository: https://github.com/TarekMedhat/aws_cloudfront_signed_url
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
