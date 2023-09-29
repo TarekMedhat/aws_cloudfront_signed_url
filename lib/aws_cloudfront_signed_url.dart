@@ -21,8 +21,8 @@ class AWSCloudFrontSignedUrl {
   /// Used to create CloudFront signed urls using custom policy
   /// https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
   const AWSCloudFrontSignedUrl({
-    @required this.keyPairId,
-    @required this.privateKey,
+    required this.keyPairId,
+    required this.privateKey,
   });
 
   /// ***[resourceUrl]*** The base URL including your query strings, if any, for example:
@@ -38,16 +38,16 @@ class AWSCloudFrontSignedUrl {
   /// ***[ipAddress]*** (Optional) The IP address of the client making the GET request
   /// (for example, 192.0.2.0/24)
   Future<String> signUrl({
-    @required String resourceUrl,
-    DateTime dateLessThan,
-    DateTime dateGreaterThan,
-    String ipAddress,
+    required String resourceUrl,
+    DateTime? dateLessThan,
+    DateTime? dateGreaterThan,
+    String? ipAddress,
   }) async {
     final String policyStatement = _createPolicyStatement(
       resourceUrl: resourceUrl,
-      dateLessThan: dateLessThan,
-      dateGreaterThan: dateGreaterThan,
-      ipAddress: ipAddress,
+      dateLessThan: dateLessThan!,
+      dateGreaterThan: dateGreaterThan!,
+      ipAddress: ipAddress!,
     );
 
     final String base64EncodedPolicy = _encodePolicyStatement(policyStatement: policyStatement);
@@ -62,10 +62,10 @@ class AWSCloudFrontSignedUrl {
   }
 
   String _createPolicyStatement({
-    @required String resourceUrl,
-    DateTime dateLessThan,
-    DateTime dateGreaterThan,
-    String ipAddress,
+    required String resourceUrl,
+    DateTime? dateLessThan,
+    DateTime? dateGreaterThan,
+    String? ipAddress,
   }) {
     Map<String, Map<String, dynamic>> conditions = {};
 
@@ -89,20 +89,20 @@ class AWSCloudFrontSignedUrl {
   }
 
   String _createSignedUrl({
-    @required String resourceUrl,
-    @required String base64EncodedPolicy,
-    String policySignature,
+    required String resourceUrl,
+    required String base64EncodedPolicy,
+    String? policySignature,
   }) {
     return resourceUrl +
         "?Policy=" +
         base64EncodedPolicy +
         "&Signature=" +
-        policySignature +
+        policySignature! +
         "&Key-Pair-Id=" +
         keyPairId;
   }
 
-  String _createSignature({@required String policyStatement}) {
+  String _createSignature({required String policyStatement}) {
     RSAPrivateKey rsaPrivateKey =
         rsaencrypt.RsaKeyHelper().parsePrivateKeyFromPem(privateKey.replaceAll(" ", ""));
     var signer = RSASigner(SHA1Digest(), "06052b0e03021a");
@@ -114,7 +114,7 @@ class AWSCloudFrontSignedUrl {
     return formattedBase64Signature;
   }
 
-  String _encodePolicyStatement({@required String policyStatement}) {
+  String _encodePolicyStatement({required String policyStatement}) {
     final policy = utf8.encode(policyStatement);
     String base64EncodedPolicy =
         base64Encode(policy).replaceAll('+', '-').replaceAll('=', '_').replaceAll('/', '~');
