@@ -1,6 +1,6 @@
 name: aws_cloudfront_signed_url
 description: Create a signed AWS cloudfront url using a custom policy
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/TarekMedhat/aws_cloudfront_signed_url
 
 false_secrets:
