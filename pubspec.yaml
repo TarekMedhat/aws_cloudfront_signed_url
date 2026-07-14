@@ -7,7 +7,7 @@ false_secrets:
   - /test/aws_cloudfront_signed_url_test.dart
 
 environment:
-  sdk: ">=2.12.0 <4.0.0"
+  sdk: ">=2.19.0 <4.0.0"
   flutter: ">=2.0.0"
 
 dependencies:
