@@ -3,7 +3,6 @@ library aws_cloudfront_signed_url;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import "package:pointycastle/export.dart";
 import 'package:rsa_encrypt/rsa_encrypt.dart' as rsaencrypt;
 
@@ -21,8 +20,8 @@ class AWSCloudFrontSignedUrl {
   /// Used to create CloudFront signed urls using custom policy
   /// https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-custom-policy.html
   const AWSCloudFrontSignedUrl({
-    @required this.keyPairId,
-    @required this.privateKey,
+    required this.keyPairId,
+    required this.privateKey,
   });
 
   /// ***[resourceUrl]*** The base URL including your query strings, if any, for example:
@@ -38,10 +37,10 @@ class AWSCloudFrontSignedUrl {
   /// ***[ipAddress]*** (Optional) The IP address of the client making the GET request
   /// (for example, 192.0.2.0/24)
   Future<String> signUrl({
-    @required String resourceUrl,
-    DateTime dateLessThan,
-    DateTime dateGreaterThan,
-    String ipAddress,
+    required String resourceUrl,
+    DateTime? dateLessThan,
+    DateTime? dateGreaterThan,
+    String? ipAddress,
   }) async {
     final String policyStatement = _createPolicyStatement(
       resourceUrl: resourceUrl,
@@ -50,9 +49,11 @@ class AWSCloudFrontSignedUrl {
       ipAddress: ipAddress,
     );
 
-    final String base64EncodedPolicy = _encodePolicyStatement(policyStatement: policyStatement);
+    final String base64EncodedPolicy =
+        _encodePolicyStatement(policyStatement: policyStatement);
 
-    final String policySignature = _createSignature(policyStatement: policyStatement);
+    final String policySignature =
+        _createSignature(policyStatement: policyStatement);
 
     return _createSignedUrl(
       resourceUrl: resourceUrl,
@@ -62,20 +63,24 @@ class AWSCloudFrontSignedUrl {
   }
 
   String _createPolicyStatement({
-    @required String resourceUrl,
-    DateTime dateLessThan,
-    DateTime dateGreaterThan,
-    String ipAddress,
+    required String resourceUrl,
+    DateTime? dateLessThan,
+    DateTime? dateGreaterThan,
+    String? ipAddress,
   }) {
-    Map<String, Map<String, dynamic>> conditions = {};
+    final Map<String, Map<String, dynamic>> conditions = {};
 
-    if (dateLessThan == null) dateLessThan = DateTime(2080);
-    final int dateLessThanEpochTime = dateLessThan.millisecondsSinceEpoch ~/ 1000;
+    final DateTime effectiveDateLessThan = dateLessThan ?? DateTime(2080);
+    final int dateLessThanEpochTime =
+        effectiveDateLessThan.millisecondsSinceEpoch ~/ 1000;
     conditions["DateLessThan"] = {"AWS:EpochTime": dateLessThanEpochTime};
 
     if (dateGreaterThan != null) {
-      final int dateGreaterThanEpochTime = dateGreaterThan.millisecondsSinceEpoch ~/ 1000;
-      conditions["DateGreaterThan"] = {"AWS:EpochTime": dateGreaterThanEpochTime};
+      final int dateGreaterThanEpochTime =
+          dateGreaterThan.millisecondsSinceEpoch ~/ 1000;
+      conditions["DateGreaterThan"] = {
+        "AWS:EpochTime": dateGreaterThanEpochTime
+      };
     }
     if (ipAddress != null) {
       conditions["IpAddress"] = {"AWS:SourceIp": ipAddress};
@@ -89,9 +94,9 @@ class AWSCloudFrontSignedUrl {
   }
 
   String _createSignedUrl({
-    @required String resourceUrl,
-    @required String base64EncodedPolicy,
-    String policySignature,
+    required String resourceUrl,
+    required String base64EncodedPolicy,
+    required String policySignature,
   }) {
     return resourceUrl +
         "?Policy=" +
@@ -102,22 +107,27 @@ class AWSCloudFrontSignedUrl {
         keyPairId;
   }
 
-  String _createSignature({@required String policyStatement}) {
-    RSAPrivateKey rsaPrivateKey =
-        rsaencrypt.RsaKeyHelper().parsePrivateKeyFromPem(privateKey.replaceAll(" ", ""));
-    var signer = RSASigner(SHA1Digest(), "06052b0e03021a");
+  String _createSignature({required String policyStatement}) {
+    final RSAPrivateKey rsaPrivateKey = rsaencrypt.RsaKeyHelper()
+        .parsePrivateKeyFromPem(privateKey.replaceAll(" ", ""));
+    final RSASigner signer = RSASigner(SHA1Digest(), "06052b0e03021a");
     signer.init(true, PrivateKeyParameter<RSAPrivateKey>(rsaPrivateKey));
-    var signedBytes = signer.generateSignature(Uint8List.fromList(policyStatement.codeUnits));
-    var signedText = base64Encode(signedBytes.bytes);
-    String formattedBase64Signature =
-        signedText.replaceAll('+', '-').replaceAll('=', '_').replaceAll('/', '~');
+    final RSASignature signedBytes =
+        signer.generateSignature(Uint8List.fromList(policyStatement.codeUnits));
+    final String signedText = base64Encode(signedBytes.bytes);
+    final String formattedBase64Signature = signedText
+        .replaceAll('+', '-')
+        .replaceAll('=', '_')
+        .replaceAll('/', '~');
     return formattedBase64Signature;
   }
 
-  String _encodePolicyStatement({@required String policyStatement}) {
-    final policy = utf8.encode(policyStatement);
-    String base64EncodedPolicy =
-        base64Encode(policy).replaceAll('+', '-').replaceAll('=', '_').replaceAll('/', '~');
+  String _encodePolicyStatement({required String policyStatement}) {
+    final List<int> policy = utf8.encode(policyStatement);
+    final String base64EncodedPolicy = base64Encode(policy)
+        .replaceAll('+', '-')
+        .replaceAll('=', '_')
+        .replaceAll('/', '~');
     return base64EncodedPolicy;
   }
 }
